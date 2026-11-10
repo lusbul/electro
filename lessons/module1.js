@@ -1,0 +1,10 @@
+
+(()=>{
+const $=id=>document.getElementById(id);const key='kman-electro-'+document.body.dataset.lesson;
+function persist(){let data={};document.querySelectorAll('textarea,input[type="text"],input[type="number"],select').forEach(x=>{if(x.id)data[x.id]=x.value});localStorage.setItem(key,JSON.stringify(data));$('saved')&&($('saved').textContent='Записи збережено на цьому пристрої.');}
+try{let data=JSON.parse(localStorage.getItem(key)||'{}');Object.entries(data).forEach(([id,v])=>{if($(id))$(id).value=v})}catch(e){}
+document.querySelectorAll('textarea,input,select').forEach(x=>x.addEventListener('change',persist));
+document.querySelectorAll('[data-save]').forEach(x=>x.addEventListener('click',persist));
+document.querySelectorAll('[data-pdf]').forEach(x=>x.addEventListener('click',()=>{persist();window.print()}));
+window.E={$,persist,setupSlots:(partsId,slotsId,verifyId,answers)=>{let selected='';const parts=[...$(partsId).querySelectorAll('[data-part]')],slots=[...$(slotsId).querySelectorAll('[data-slot]')];const select=(el)=>{selected=el.dataset.part;parts.forEach(p=>p.classList.toggle('selected',p===el))};parts.forEach(el=>{el.draggable=true;el.addEventListener('click',()=>select(el));el.addEventListener('dragstart',ev=>{select(el);ev.dataTransfer.setData('text/plain',selected)})});slots.forEach(slot=>{function put(v){slot.dataset.value=v;slot.textContent=v;slot.classList.add('filled');window.E.persist()}slot.addEventListener('click',()=>{if(selected)put(selected);else if(slot.dataset.value){slot.textContent='Оберіть деталь';delete slot.dataset.value;slot.classList.remove('filled')}});slot.addEventListener('dragover',ev=>ev.preventDefault());slot.addEventListener('drop',ev=>{ev.preventDefault();put(ev.dataTransfer.getData('text/plain')||selected)})});$(verifyId).addEventListener('click',()=>{let ok=slots.every((s,i)=>s.dataset.value===answers[i]);$(verifyId+'-feedback').textContent=ok?'✓ Конструкцію складено правильно. Поясніть роль кожного елемента.':'Є неточність. Перевірте порядок або призначення деталей і спробуйте ще.'})}};
+})();
