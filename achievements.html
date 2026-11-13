@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Досягнення · Електроніка та приладобудування</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page">
+<main class="page-main">
+  <h1>Мої досягнення</h1>
+  <p class="lead">За кожен пройдений урок ти отримуєш наліпку. Їх можна завантажити й поділитися ними.</p>
+  <label class="name ach-name">Ім’я на картках (не обов’язково)<input id="nm" maxlength="24" placeholder="Наприклад, Оля"></label>
+  <p class="small" id="ach-sum"></p>
+  <div class="ach-grid" id="ach"></div>
+
+  <section class="excl">
+    <h2>⭐ Ексклюзив</h2>
+    <p class="small">Особливі наліпки за додаткові досягнення — наприклад, за 20 розв’язаних задач у тренажері уроку.</p>
+    <div class="ach-grid small-grid" id="ach-ex"></div>
+  </section>
+
+  <section class="transfer">
+    <h2>Перенести прогрес на інший пристрій</h2>
+    <p class="small">Прогрес і наліпки зберігаються в цьому браузері. Щоб продовжити на іншому комп’ютері чи телефоні, збережи прогрес у файл і завантаж його там.</p>
+    <div class="actions">
+      <button class="primary" id="pf-save">💾 Зберегти прогрес у файл</button>
+      <label class="primary alt pf-load">📂 Завантажити прогрес із файлу<input type="file" id="pf-file" accept=".electro" hidden></label>
+    </div>
+    <p class="small" id="pf-msg" aria-live="polite"></p>
+  </section>
+</main>
+<script src="settings.js"></script>
+<script src="js/site.js"></script>
+<script>renderSiteChrome('achievements');</script>
+<script src="js/cats.js"></script>
+<script src="js/card.js"></script>
+<script src="js/lessons-list.js"></script>
+<script src="js/progress-file.js"></script>
+<script>
+(function () {
+  const read = id => { try { return JSON.parse(localStorage.getItem('electro-progress-' + id) || 'null'); } catch (e) { return null; } };
+  const getName = () => { try { return localStorage.getItem('electro-name') || ''; } catch (e) { return ''; } };
+  const lessons = COURSE.flatMap(m => m.lessons).filter(l => l.ready);
+  const box = document.getElementById('ach'), nm = document.getElementById('nm');
+  nm.value = getName();
+
+  // Підвантажити наліпку уроку (lessons/stickers/<id>.sticker.js), якщо вона є
+  const loadSticker = id => new Promise(res => {
+    if ((window.STICKERS || {})[id]) return res();
+    const s = document.createElement('script'); s.src = 'lessons/stickers/' + id + '.sticker.js';
+    s.onload = res; s.onerror = res; document.body.appendChild(s);
+  });
+
+  async function draw() {
+    let got = 0;
+    const items = [];
+    const loadBonus = id => new Promise(res => { if ((window.STICKERS || {})[id + 'b'] || (window.STICKERS || {})[id + 'k']) return res(); const s = document.createElement('script'); s.src = 'lessons/stickers/' + id + '.bonus.js'; s.onload = res; s.onerror = res; document.body.appendChild(s); });
+    for (const l of lessons) {
+      const st = read(l.id);
+      if (st && st.complete && st.card) {
+        await loadSticker(l.id);
+        got++;
+        items.push({ l, meta: { ...st.card, name: getName(), sticker: (window.STICKERS || {})[l.id] } });
+      } else items.push({ l, meta: null });
+      // Ексклюзивні наліпки за тренажери: отримана — показуємо, ні — замок із прогресом 3/20
+      for (const t of l.trainers || []) {
+        const gen = Object.values((st && st.gen) || {}).find(g => g.key === t.key);
+        let solved = gen ? gen.ok : 0;
+        if (!gen && t.key === 'b') solved = Math.max(0, ...Object.values((st && st.genSolved) || {}));   // старі записи
+        const when = st && ((st.bonuses || {})[t.key] || (t.key === 'b' && typeof st.bonus === 'string' && st.bonus));
+        const info = `Розв’яжи ${t.need} задач у тренажері «${t.topic}» (урок ${l.n})`;
+        if (when) { await loadBonus(l.id); const b = (window.STICKERS || {})[l.id + t.key]; if (b) { got++; items.push({ l, t, info, ex: true, bonus: true, meta: { sticker: b } }); continue; } }
+        items.push({ l, t, info, ex: true, trainerLock: { solved: Math.min(solved, t.need), need: t.need } });
+      }
+    }
+    // Ще не готові уроки показуємо як закриті місця для наліпок
+    COURSE.flatMap(m => m.lessons).filter(l => !l.ready).slice(0, Math.max(0, 6 - items.filter(x => !x.ex).length)).forEach(l => items.push({ l, meta: null }));
+    const stk = meta => meta.sticker || { src: CATS.thumb, size: [358, 420] };
+    const tip = it => `<button class="info" type="button" aria-label="Як отримати" data-tip="${it.info}">i</button>`;
+    const card = (it, k) => { const { l, meta, bonus, trainerLock: tl } = it; return tl ? `
+      <figure class="ach-card locked trainer">
+        ${tip(it)}
+        <div class="ach-lock">🔒<span>${it.t.topic}</span><b class="tr-count">${tl.solved}/${tl.need}</b>
+          <div class="tr-bar"><span style="width:${tl.solved / tl.need * 100}%"></span></div></div>
+      </figure>` : bonus ? `
+      <figure class="ach-card bonus">
+        ${tip(it)}
+        <div class="ach-sticker"><img src="${meta.sticker.src}" alt="Наліпка «${it.t.topic}»"></div>
+        <figcaption><b>${it.t.topic}</b></figcaption>
+        <button class="primary" data-k="${k}" data-what="sticker">⬇️ Наліпка</button>
+      </figure>` : meta ? `
+      <figure class="ach-card">
+        <div class="ach-sticker"><img src="${stk(meta).src}" alt="Наліпка за урок ${l.n}"></div>
+        <figcaption><b>Урок ${l.n}</b> · ${l.title}<br><span class="ach-stars">${'★'.repeat(meta.stars || 0)}${'☆'.repeat(3 - (meta.stars || 0))}</span></figcaption>
+        <button class="primary" data-k="${k}" data-what="sticker">⬇️ Наліпка</button>
+        <button class="ach-alt" data-k="${k}" data-what="card">Картка з ім’ям і зірками</button>
+      </figure>` : `
+      <figure class="ach-card locked">
+        <div class="ach-lock">🔒<span>Урок ${l.n}</span></div>
+        <figcaption>${l.ready ? `<a href="lesson.html?l=${l.id}">Пройди урок ${l.n}</a>, щоб отримати наліпку` : `Урок ${l.n} готується`}</figcaption>
+      </figure>`; };
+    box.innerHTML = items.map((it, k) => it.ex ? '' : card(it, k)).join('');
+    document.getElementById('ach-ex').innerHTML = items.map((it, k) => it.ex ? card(it, k) : '').join('');
+    document.getElementById('ach-sum').textContent = `Зібрано наліпок: ${got}`;
+    // Наліпка — сама картинка (PNG із прозорим тлом); картка — повний «постер» з ім'ям і зірками
+    const stickerPNG = async src => {
+      const img = new Image(); img.src = src; await img.decode();
+      const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+      cv.getContext('2d').drawImage(img, 0, 0);
+      return new Promise(r => cv.toBlob(r, 'image/png'));
+    };
+    document.querySelectorAll('.info').forEach(b => b.onclick = () => b.classList.toggle('open'));
+    document.querySelectorAll('#ach button[data-k], #ach-ex button[data-k]').forEach(b => b.onclick = async () => {
+      const { l, meta } = items[+b.dataset.k];
+      const card = b.dataset.what === 'card';
+      const blob = card ? await Card.png(meta) : await stickerPNG(stk(meta).src);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = card ? `картка-урок-${l.n}.png` : items[+b.dataset.k].bonus ? `наліпка-${items[+b.dataset.k].t.topic.replace(/\s+/g, '-')}.png` : `наліпка-урок-${l.n}.png`; a.click();
+    });
+  }
+  const msg = document.getElementById('pf-msg');
+  document.getElementById('pf-save').onclick = () => { ProgressFile.download(); msg.textContent = 'Файл збережено. Відкрий цю сторінку на іншому пристрої й завантаж його.'; };
+  document.getElementById('pf-file').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const n = await ProgressFile.upload(f); msg.textContent = `Готово! Прогрес завантажено (уроків: ${n}).`; nm.value = getName(); draw(); }
+    catch (err) { msg.textContent = 'Цей файл не підходить: можливо, він пошкоджений або змінений.'; }
+    e.target.value = '';
+  };
+  nm.oninput = () => { try { localStorage.setItem('electro-name', nm.value.trim()); } catch (e) {} draw(); };
+  draw();
+})();
+</script>
+</body>
+</html>

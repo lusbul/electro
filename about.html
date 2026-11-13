@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Про автора курсу · Електроніка та приладобудування</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page">
+<main class="page-main narrow">
+  <h1>Про автора курсу</h1>
+  <section class="author-card">
+    <img id="a-cat" alt="">
+    <div>
+      <h2 id="a-name"></h2>
+      <p id="a-role"></p>
+      <p id="a-pos"></p>
+      <p class="small">Курс, уроки, ілюстрації та конструктор інтерактивних схем — авторська розробка.</p>
+      <p id="a-contacts" class="sf-contacts"></p>
+    </div>
+  </section>
+
+  <section class="ai-note" id="ai">
+    <h2>Використання штучного інтелекту</h2>
+    <p>Під час підготовки курсу авторка використовувала інструменти генеративного штучного інтелекту — для чернеток текстів, ілюстрацій і програмного коду сайту.</p>
+    <p>Структуру курсу, послідовність тем, завдання й навчальні матеріали розробила, перевірила та відредагувала авторка. Відповідальність за зміст курсу несе авторка.</p>
+  </section>
+</main>
+<script src="settings.js"></script>
+<script src="js/site.js"></script>
+<script>renderSiteChrome('about');</script>
+<script src="js/cats.js"></script>
+<script>
+  const a = SITE.author;
+  document.getElementById('a-cat').src = CATS.happy;
+  document.getElementById('a-name').textContent = a.name;
+  const cap = t => t ? t[0].toUpperCase() + t.slice(1) : '';
+  document.getElementById('a-role').textContent = cap(a.role);
+  document.getElementById('a-pos').textContent = [cap(a.position), a.org].filter(Boolean).join(', ');
+  document.getElementById('a-contacts').innerHTML = [
+    a.email && `<a href="mailto:${a.email}">${a.email}</a>`,
+    a.telegram && `<a href="https://t.me/${a.telegram.replace(/^@/, '')}">Telegram</a>`
+  ].filter(Boolean).join(' · ');
+</script>
+</body>
+</html>

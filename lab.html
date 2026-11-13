@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Лабораторна робота · Електроніка та приладобудування</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page">
+<main class="page-main"><div id="lab"></div></main>
+<div id="sheet-box"></div>
+<script src="settings.js"></script>
+<script src="js/site.js"></script>
+<script>renderSiteChrome('lessons');</script>
+<script src="js/lessons-list.js"></script>
+<script src="js/feedback.js"></script>
+<script>
+  /* Завантаження лабораторної за адресою lab.html?l=lab01 */
+  (function () {
+    const id = (new URLSearchParams(location.search).get('l') || 'lab01').replace(/[^a-z0-9_-]/gi, '');
+    const s = document.createElement('script'); s.src = 'lessons/' + id + '.js';
+    s.onload = () => { const e = document.createElement('script'); e.src = 'js/lab.js'; document.body.appendChild(e); };
+    s.onerror = () => { document.getElementById('lab').innerHTML = '<div class="lab-card-box"><h2>Ця лабораторна ще готується</h2><a class="primary" href="index.html">До переліку уроків</a></div>'; };
+    document.body.appendChild(s);
+  })();
+</script>
+</body>
+</html>

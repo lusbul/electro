@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Урок · Електроніка та приладобудування</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="lesson-page">
+<div class="top">
+  <div class="top-row">
+    <div class="top-title"><h1 id="lesson-title"></h1><span id="counter"></span></div>
+    <button class="icon-btn" id="reset" title="Почати урок спочатку">↺</button>
+  </div>
+  <div id="progress" aria-hidden="true"></div>
+</div>
+
+<main><section id="step" aria-live="polite"></section></main>
+
+<nav class="nav"><div class="nav-row">
+  <button id="back" aria-label="Назад">←</button>
+  <button id="next">Далі →</button>
+</div></nav>
+
+<script src="settings.js"></script>
+<script src="js/site.js"></script>
+<script>renderSiteChrome('lessons');</script>
+<script src="js/cats.js"></script>
+<script src="js/parts.js"></script>
+<script src="js/circuit.js"></script>
+<script src="js/models.js"></script>
+<script src="js/arduino.js"></script>
+<script src="js/figures.js"></script>
+<script src="js/card.js"></script>
+<script src="js/feedback.js"></script>
+<script>
+  /* Завантаження уроку за адресою lesson.html?l=l01 */
+  (function () {
+    const id = (new URLSearchParams(location.search).get('l') || 'l01').replace(/[^a-z0-9_-]/gi, '');
+    const s = document.createElement('script');
+    s.src = 'lessons/' + id + '.js';
+    const engine = () => { const e = document.createElement('script'); e.src = 'js/engine.js'; document.body.appendChild(e); };
+    // Після уроку — його наліпка (якщо є), потім рушій
+    s.onload = () => {
+      const load = (src, next) => { const k = document.createElement('script'); k.src = src; k.onload = next; k.onerror = next; document.body.appendChild(k); };
+      load('lessons/stickers/' + id + '.sticker.js', () => window.LESSON && window.LESSON.steps.some(x => x.bonus) ? load('lessons/stickers/' + id + '.bonus.js', engine) : engine());
+    };
+    s.onerror = () => {
+      document.querySelector('.top').hidden = true; document.querySelector('.nav').hidden = true;
+      document.getElementById('step').innerHTML = '<div class="panel kind-theory"><h2>Цей урок ще готується</h2><p class="lead">Загляньте трохи згодом, а поки можна пройти готові уроки.</p><a class="primary" href="index.html">До переліку уроків</a></div>';
+    };
+    document.body.appendChild(s);
+  })();
+</script>
+</body>
+</html>
