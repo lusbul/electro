@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Хочу більше · Електроніка та приладобудування</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page">
+<main class="page-main narrow">
+  <h1>Хочу більше</h1>
+  <p class="lead">Уроки на сайті — це знайомство. На секції все по-справжньому.</p>
+  <div class="cards3">
+    <div class="c blue"><b>Справжні деталі</b><br>Макетні плати, Arduino, датчики, мультиметр — збираєш сам, а не тільки на екрані.</div>
+    <div class="c peach"><b>Свій прилад</b><br>За рік — від простого кола до власного пристрою, який можна захистити на конкурсі МАН.</div>
+    <div class="c yellow"><b>Лабораторії КПІ</b><br>Заняття на Факультеті електроніки КПІ ім. Ігоря Сікорського.</div>
+  </div>
+
+  <h2>Умови приєднання</h2>
+  <!-- TODO: розклад і місце проведення -->
+  <p>Секція для учнів <b>8–10 класів</b> Київської малої академії наук. Розклад і місце проведення — <i>уточнюється</i>.</p>
+  <ol class="steps-join" id="join-steps"></ol>
+</main>
+<script src="settings.js"></script>
+<script src="js/site.js"></script>
+<script>renderSiteChrome('join');</script>
+<script>
+  const L = SITE.links, ext = (h, t) => `<a href="${h}" target="_blank" rel="noopener">${t}</a>`;
+  document.getElementById('join-steps').innerHTML = [
+    `<li><b>Зареєструйся в Київській МАН</b> і обери секцію «Електроніка та приладобудування».${L.signup ? '<br>' + ext(L.signup, 'Запис на секцію ↗') : ''}</li>`,
+    `<li><b>Долучись до чату секції</b> — там розклад, оголошення й відповіді на питання.${L.joinForm ? '<br>' + ext(L.joinForm, 'Долучитися до чату ↗') : ''}</li>`,
+    `<li><b>Підпишись на канал лабораторії</b> — новини, фото з занять, конкурси.${L.labChannel ? '<br>' + ext(L.labChannel, 'Telegram-канал лабораторії ↗') : ''}</li>`
+  ].join('');
+</script>
+</body>
+</html>

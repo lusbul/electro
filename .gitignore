@@ -1,0 +1,40 @@
+# Робочі файли авторки (на сайт не потрапляють)
+lessons/_уроки.md
+lessons/*-draft.js
+Kman electro lessons*/
+*.skill
+.claude/
+
+# Системні файли Windows / macOS
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.DS_Store
+$RECYCLE.BIN/
+
+# Google Drive: тимчасові файли синхронізації й ярлики
+.tmp.drivedownload/
+.tmp.driveupload/
+*.gdoc
+*.gsheet
+*.gslides
+
+# Тимчасові файли Office і редакторів
+~$*
+*.tmp
+*.bak
+*.swp
+*~
+.vscode/
+.idea/
+
+# Інструменти розробки
+node_modules/
+__pycache__/
+*.pyc
+*.log
+
+# Архіви (вивантаження, резервні копії)
+*.zip
+*.7z
+*.rar

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Перегляд прогресу учнів</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .pv table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0 24px;background:#fff}
+  .pv th{background:#1F3B63;color:#fff;padding:7px;text-align:left}
+  .pv td{border-bottom:1px solid var(--line);padding:6px 7px;vertical-align:top}
+  .pv h2{color:var(--title);margin:24px 0 4px}
+  .pv .file{color:var(--muted);font-size:.8rem}
+  .pv details{margin:4px 0}
+</style>
+</head>
+<body class="page">
+<main class="page-main pv">
+  <h1>Перегляд прогресу учнів</h1>
+  <p class="small">Сторінка для викладача, у меню сайту її немає. Обери один або кілька файлів <b>.electro</b>, які надіслали учні. Файли нікуди не відправляються — усе читається тут, у браузері.</p>
+  <input type="file" id="files" accept=".electro" multiple>
+  <div id="out"></div>
+</main>
+<script src="settings.js"></script>
+<script src="js/site.js"></script>
+<script>renderSiteChrome('');</script>
+<script src="js/lessons-list.js"></script>
+<script src="js/progress-file.js"></script>
+<script>
+  const titles = Object.fromEntries(COURSE.flatMap(m => m.lessons).map(l => [l.id, `Урок ${l.n}. ${l.title}`]));
+  const fmt = iso => iso ? new Date(iso).toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+  const dur = (a, b) => { if (!a || !b) return '—'; const m = Math.round((new Date(b) - new Date(a)) / 60000); return m < 60 ? m + ' хв' : Math.floor(m / 60) + ' год ' + (m % 60) + ' хв'; };
+  document.getElementById('files').onchange = async e => {
+    const out = document.getElementById('out'); out.innerHTML = '';
+    for (const f of e.target.files) {
+      let data;
+      try { data = ProgressFile.decode(await f.text()); }
+      catch (err) { out.insertAdjacentHTML('beforeend', `<h2>${f.name}</h2><p>Файл пошкоджений або змінений вручну.</p>`); continue; }
+      const rows = Object.entries(data.lessons || {}).map(([id, st]) => {
+        const steps = Object.entries(st.doneAt || {}).sort((a, b) => a[1] < b[1] ? -1 : 1)
+          .map(([i, t]) => `крок ${+i + 1}: ${fmt(t)}`).join('<br>');
+        const mist = Object.values(st.mistakes || {}).reduce((a, b) => a + b, 0);
+        const pr = Object.values(st.practice || {}).filter(Boolean).length;
+        return `<tr><td>${titles[id] || id}</td>
+          <td>${Object.keys(st.done || {}).length}${st.total ? ' з ' + st.total : ''}</td>
+          <td>${st.complete ? '✓' : '—'}</td><td>${(st.card && st.card.stars) || '—'}</td><td>${mist}</td><td>${pr}</td>
+          <td>${fmt(st.startedAt)}</td><td>${fmt(st.completedAt)}</td><td>${dur(st.startedAt, st.completedAt)}</td>
+          <td>${steps ? `<details><summary>час кроків</summary>${steps}</details>` : '—'}</td></tr>`;
+      }).join('');
+      out.insertAdjacentHTML('beforeend', `<h2>${data.name || 'Без імені'}</h2><div class="file">${f.name}</div>
+        <table><thead><tr><th>Урок</th><th>Кроків</th><th>Завершено</th><th>Зірки</th><th>Помилок</th><th>Tinkercad</th><th>Почато</th><th>Завершено</th><th>Тривалість</th><th>Журнал</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="10">Немає даних</td></tr>'}</tbody></table>`);
+    }
+  };
+</script>
+</body>
+</html>

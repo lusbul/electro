@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Про автора курсу · Електроніка та приладобудування</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page">
+<main class="page-main narrow">
+  <h1>Про автора курсу</h1>
+  <section class="author-card">
+    <img src="img/author.webp" alt="Шевлякова Ганна Вікторівна" class="author-photo">
+    <div>
+      <h2 id="a-name"></h2>
+      <p id="a-role"></p>
+      <p id="a-pos"></p>
+      <p class="small">Курс, уроки, ілюстрації та конструктор інтерактивних схем — авторська розробка.</p>
+      <h3 class="contacts-h">Контакти</h3>
+      <ul id="a-contacts" class="contact-list"></ul>
+    </div>
+  </section>
+  <p class="small">Як можна використовувати матеріали курсу і які сервіси він використовує — на сторінці <a href="resource.html">«Про ресурс»</a>.</p>
+</main>
+<script src="settings.js"></script>
+<script src="js/site.js"></script>
+<script>renderSiteChrome('about');</script>
+<script>
+  const a = SITE.author, ext = (h, t) => `<a href="${h}" target="_blank" rel="noopener">${t}</a>`;
+  document.getElementById('a-name').textContent = a.name;
+  const cap = t => t ? t[0].toUpperCase() + t.slice(1) : '';
+  document.getElementById('a-role').textContent = cap(a.role);
+  document.getElementById('a-pos').textContent = cap(a.position);
+  const nick = (a.telegram || '').replace(/^@/, '');
+  document.getElementById('a-contacts').innerHTML = [
+    a.org && `<li>🏛️ ${a.orgUrl ? ext(a.orgUrl, a.org) : a.org}</li>`,
+    a.phone && `<li>📞 <a href="tel:${a.phone.replace(/[^+\d]/g, '')}">${a.phone}</a></li>`,
+    a.email && `<li>✉️ <a href="mailto:${a.email}">${a.email}</a></li>`,
+    nick && `<li>💬 ${ext('https://t.me/' + nick, 'Telegram: @' + nick)}</li>`
+  ].filter(Boolean).join('') || '<li class="small">Контакти з’являться тут (заповніть їх у файлі settings.js).</li>';
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Бібліотека деталей · конструктор</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body{display:block;background:#fff}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 16px 60px}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .tile{background:#EAF3FB;border-radius:14px;padding:12px;box-shadow:0 2px 0 var(--line)}
+  .tile h3{margin:0 0 4px;font-size:15px}
+  .tile code{font-size:12px;color:var(--muted)}
+  .tile .two{display:grid;grid-template-columns:1fr 1fr;gap:6px}.tile svg{width:100%;height:150px;background:#fff;border-radius:6px}.tile .cap{font-size:11px;color:var(--muted);text-align:center}
+  .pin-dot{fill:var(--orange)} .pin-name{font-size:12px;fill:var(--orange);font-weight:700}
+  .box{background:#fff;border:1.5px solid #DEE2E6;border-radius:14px;padding:16px;margin-top:18px;box-shadow:0 2px 0 var(--line)}
+  pre{background:#1f2a44;color:#e8eefc;padding:14px;border-radius:12px;overflow:auto;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Бібліотека деталей</h1>
+  <p class="small"><a href="index.html">← До переліку уроків</a> · Помаранчеві точки — виводи, до яких можна під'єднати дріт у описі схеми (<code>"R1.1"</code>, <code>"uno.D8"</code>…).</p>
+  <div class="gallery" id="gallery"></div>
+
+  <div class="box">
+    <h2>Приклад: Arduino, кнопка з підтяжкою до землі і світлодіод</h2>
+    <div class="view-toggle" style="position:static;display:inline-flex;margin-bottom:8px"><button data-v="real" class="on">Деталі</button><button data-v="schematic">Схема</button></div>
+    <p class="small">Натисни на кнопку на схемі. Тут Arduino поводиться за заданою поведінкою: «кнопка натиснута → D8 увімкнено».</p>
+    <div class="scheme"><svg id="ard" class="circuit"></svg></div>
+    <details><summary>Опис цієї схеми (дані)</summary><pre id="src"></pre></details>
+  </div>
+</div>
+
+<script src="js/parts.js"></script>
+<script src="js/circuit.js"></script>
+<script>
+/* Галерея: кожна деталь у двох виглядах, з підписаними виводами */
+const g = document.getElementById('gallery');
+const sample = { battery:{value:9}, resistor:{value:220}, led:{color:'red'}, multimeter:{mode:'A'}, switch:{closed:false}, button:{}, gnd:{}, 'arduino-uno':{} };
+for (const [type, opts] of Object.entries(sample)) {
+  const P = PARTS[type], pad = 40;
+  const pinDots = pp => Object.entries(pp).map(([n,[x,y]]) =>
+    `<circle class="pin-dot" cx="${x}" cy="${y}" r="5"/>` +
+    (type === 'arduino-uno' ? '' : `<text class="pin-name" x="${x + 6}" y="${y + 16}">${n}</text>`)).join('');
+  const pins = pinDots(P.pins), rpins = pinDots({ ...P.pins, ...(P.realPins || {}) });
+  const vb = `${-pad - 30} ${-pad} ${P.w + pad * 2 + 30} ${P.h + pad * 2 + 20}`;
+  g.insertAdjacentHTML('beforeend', `<div class="tile"><h3>${type}</h3><code>${Object.keys(P.pins).length} виводів</code>
+    <div class="two"><div><svg viewBox="${vb}">${P.real({ ...opts, id: 'r-' + type })}${rpins}</svg><div class="cap">Деталь</div></div>
+    <div><svg viewBox="${vb}">${P.draw({ ...opts, id: 'g-' + type })}${pins}</svg><div class="cap">Схема</div></div></div></div>`);
+}
+// Один LED у галереї показуємо увімкненим
+['#g-led', '#r-led'].forEach(p => { document.querySelector(p + '-glow').setAttribute('opacity', .9); document.querySelector(p + '-body').setAttribute('fill', '#ff3b30'); });
+
+/* Схема з Arduino: вузли з трьома виводами, земля, живлення */
+const def = {
+  viewBox: '-20 -40 660 500',
+  parts: {
+    uno: { type: 'arduino-uno', x: 40, y: 20 },
+    R1:  { type: 'resistor', value: 220, x: 300, y: 160 },
+    L1:  { type: 'led', color: 'red', x: 440, y: 150 },
+    G1:  { type: 'gnd', x: 520, y: 220 },
+    S1:  { type: 'button', x: 300, y: 272, pressed: false },
+    R2:  { type: 'resistor', value: 10000, x: 320, y: 330, rot: 90 },
+    G2:  { type: 'gnd', x: 280, y: 430 },
+    G3:  { type: 'gnd', x: 0, y: 140 }
+  },
+  nets: {
+    led_out: ['uno.D8', 'R1.1'],
+    led_mid: ['R1.2', 'L1.A'],
+    led_gnd: ['L1.K', 'G1.g'],
+    btn_in:  ['uno.D2', 'S1.1', 'R2.1'],
+    pull_gnd:['R2.2', 'G2.g'],
+    vcc:     ['S1.2', 'uno.5V'],
+    uno_gnd: ['uno.GND', 'G3.g']
+  },
+  via: {
+    vcc: [[600, 312], [600, -10], [15, -10], [15, 90]],
+    uno_gnd: [[20, 116], [20, 140]]
+  },
+  behavior: 'buttonLight'
+};
+document.getElementById('src').textContent = JSON.stringify(def, null, 2);
+
+const svg = document.getElementById('ard');
+let curView = 'real';
+document.querySelectorAll('.view-toggle button').forEach(b => b.onclick = () => {
+  curView = b.dataset.v;
+  document.querySelectorAll('.view-toggle button').forEach(x => x.classList.toggle('on', x === b));
+  draw();
+});
+function draw() {
+  const c = Circuit.render(svg, def, curView);
+  const on = def.parts.S1.pressed;
+  c.setCurrent(0);
+  // Струм показуємо лише в колі світлодіода
+  svg.querySelectorAll('.flow').forEach(f => {
+    if (on && (f.dataset.net.startsWith('led') || f.dataset.net === 'vcc' || f.dataset.net === 'btn_in')) { f.style.opacity = 1; f.style.animationDuration = '.25s'; }
+  });
+  c.setLed('L1', on ? 1 : 0, false);
+  c.setPin('uno', 'D8', on); c.setPin('uno', 'D2', on);
+  const btn = svg.querySelector('[data-id="S1"]');
+  btn.style.cursor = 'pointer';
+  btn.insertAdjacentHTML('afterbegin', '<rect x="-10" y="-20" width="120" height="80" fill="transparent"/>');
+  btn.onclick = () => { def.parts.S1.pressed = !on; draw(); };
+}
+draw();
+</script>
+</body>
+</html>
